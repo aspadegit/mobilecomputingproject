@@ -1,17 +1,51 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Apps from './Apps';
 import Relationships from './Relationships';
 import Services from './Services';
 import Things from './Things';
 import NavigationBar from './NavigationBar';
+import axios from 'axios';
+
 
 function App() {
+
+  const [things, setThings] = useState([]);
+  const [services, setServices] = useState([]);
+
+  useEffect(() => {
+    const dataTimer = setInterval(() => {
+      axios.get('http://localhost:3001/getThings') 
+      .then(response => {
+        console.log(response.data)
+        setThings(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+    }, 1000);
+    return () => clearInterval(dataTimer);
+  }, []);
+
+  useEffect(() => {
+    const dataTimer = setInterval(() => {
+      axios.get('http://localhost:3001/getServices') 
+      .then(response => {
+        console.log(response.data)
+        setServices(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+    }, 1000);
+    return () => clearInterval(dataTimer);
+  }, []);
+
   return (
     <Router>
         <NavigationBar />
         <Routes>
-          <Route path="/" element={<Things/>} />
+          <Route path="/" element={<Things things={things}/>} />
           <Route path="/Services" element={<Services/>} />
           <Route path="/Relationships" element={<Relationships/>} />
           <Route path="/Apps" element={<Apps/>} />

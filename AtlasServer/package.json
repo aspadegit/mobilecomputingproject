@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "dgram": "^1.0.1",
+    "express": "^4.19.2",
+    "local-devices": "^4.0.0",
+    "mqtt": "^5.5.2",
+    "net": "^1.0.2",
+    "nmap": "^1.1.0",
+    "node": "^18.20.1",
+    "node-nmap": "^4.0.0",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
+    "ws": "^8.16.0"
+  },
+  "type": "module"
+}
