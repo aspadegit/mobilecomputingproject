@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import Blockly from 'blockly';
 import { Button } from 'react-bootstrap';
 import { saveAs } from 'file-saver';
+import { Modal } from 'react-bootstrap'
 
 function Apps() {
   const workspaceRef = useRef(null);
@@ -72,13 +73,39 @@ function Apps() {
   }
   };
 
+  const [show, setShow] = useState(true);
+
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+
   return (
-    <div>
-      <div ref={workspaceRef} style={{ height: '480px', width: '600px' }} />
-      <Button onClick={handleSaveApp} disabled={appSaved}>
-        {appSaved ? 'App Saved' : 'Save App'}
-      </Button>
-      <input type="file" onChange={handleFileUpload} />
+    <div style={{display: "flex", flexDirection: "column", marginLeft: "10px", marginRight: "10px"}}>
+
+      <Modal
+        show={show}
+        onHide={handleClose}
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Welcome to the App Editor</Modal.Title>
+        </Modal.Header>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Upload exisitng app
+          </Button>
+          <Button variant="primary">Start a new app</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <div ref={workspaceRef} style={{ height: '84vh', width: '98vw' }} />
+      <div >
+        <Button onClick={handleSaveApp} disabled={appSaved}>
+          {appSaved ? 'App Saved' : 'Save App'}
+        </Button>
+        <input style= {{marginLeft: "10px", marginTop: "10px"}}type="file" onChange={handleFileUpload} />
+      </div>
+      
     </div>
   );
 }
