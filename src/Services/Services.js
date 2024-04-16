@@ -1,9 +1,18 @@
 import React from "react";
 import Card from 'react-bootstrap/Card';
 
-let tempArray = [{name: "service1"}, {name: "Service 2"}]
+let tempArray = [{name: "def 2"}, {name: "abc"}, {name: "bcd"}]
+tempArray.sort(compare)
 
-
+function compare( a, b ) { //put services in alphabetical order
+  if ( a.name < b.name ){
+    return -1;
+  }
+  if ( a.name > b.name ){
+    return 1;
+  }
+  return 0;
+}
 
 function Services() {
   return (
