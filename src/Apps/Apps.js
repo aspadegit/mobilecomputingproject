@@ -1,9 +1,11 @@
 // Apps.js
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Blockly from 'blockly';
+import { Button } from 'react-bootstrap';
 
 function Apps() {
   const workspaceRef = useRef(null);
+  const [appSaved, setAppSaved] = useState(false);
 
   useEffect(() => {
     const toolboxXml = `
@@ -32,15 +34,27 @@ function Apps() {
     const workspace = Blockly.inject(workspaceRef.current, {
       toolbox: toolboxXml,
     });
+
+    workspace.addChangeListener(() => {
+      setAppSaved(false);
+    });
   
     return () => {
       workspace.dispose();
     };
   }, []);
 
+  const handleSaveApp = () => {
+    // Logic to save the app
+    setAppSaved(true);
+  };
+
   return (
     <div>
       <div ref={workspaceRef} style={{ height: '480px', width: '600px' }} />
+      <Button onClick={handleSaveApp} disabled={appSaved}>
+        {appSaved ? 'App Saved' : 'Save App'}
+      </Button>
     </div>
   );
 }
