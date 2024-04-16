@@ -2,10 +2,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Blockly from 'blockly';
 import { Button } from 'react-bootstrap';
+import { saveAs } from 'file-saver';
 
 function Apps() {
   const workspaceRef = useRef(null);
   const [appSaved, setAppSaved] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
 
   useEffect(() => {
     const toolboxXml = `
@@ -45,8 +47,29 @@ function Apps() {
   }, []);
 
   const handleSaveApp = () => {
-    // Logic to save the app
-    setAppSaved(true);
+    const fileName = prompt("Enter a file name (including extension):", "app.iot");
+    if (fileName !== null && fileName !== "") {
+      const xml = Blockly.Xml.workspaceToDom(Blockly.getMainWorkspace());
+      const xmlText = Blockly.Xml.domToText(xml);
+      const blob = new Blob([xmlText], { type: 'text/xml' });
+      saveAs(blob, fileName);
+      setAppSaved(true);
+  }
+
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+  if (file) {
+    setUploadedFile(file);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const fileContent = event.target.result;
+      // You can process the file content here
+      console.log('Uploaded file content:', fileContent);
+    };
+    reader.readAsText(file);
+  }
   };
 
   return (
@@ -55,6 +78,7 @@ function Apps() {
       <Button onClick={handleSaveApp} disabled={appSaved}>
         {appSaved ? 'App Saved' : 'Save App'}
       </Button>
+      <input type="file" onChange={handleFileUpload} />
     </div>
   );
 }
