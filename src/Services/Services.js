@@ -1,8 +1,19 @@
 import React from "react";
+import Card from 'react-bootstrap/Card';
+
+let tempArray = [{name: "service1"}, {name: "Service 2"}]
 
 function Services() {
     return (
-      <h1>Services currently under construction</h1>
+    <div>
+      {tempArray.map((item, index) => (
+          <Card>
+            <Card.Body>
+              Service Name: {item.name}
+            </Card.Body>
+          </Card>
+          ))}
+    </div>
     );
   }
   
