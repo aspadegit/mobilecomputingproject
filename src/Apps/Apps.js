@@ -40,7 +40,6 @@ function Apps() {
 
   return (
     <div>
-      <h1>Apps currently under construction</h1>
       <div ref={workspaceRef} style={{ height: '480px', width: '600px' }} />
     </div>
   );
