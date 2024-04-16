@@ -98,13 +98,17 @@ function Apps() {
 
       <AppManager show={showManager} onClose={() => setShowManager(false)} />
 
+      {/* Blockly */}
       <div ref={workspaceRef} style={{ height: '84vh', width: '98vw' }} />
       <div>
+        {/* Save app */}
         <Button onClick={handleSaveApp} disabled={appSaved}>
           {appSaved ? 'App Saved' : 'Save App'}
         </Button>
+        {/* Input file */}
         <input style={{ marginLeft: "10px", marginTop: "10px" }} type="file" onChange={handleFileUpload} />
-        <Button variant="secondary" onClick={() => setShowManager(true)} style={{float:'right'}}>App Manager</Button>
+        {/* App Manager */}
+        <Button variant="secondary" onClick={() => setShowManager(true)} style={{float:'right', marginTop: "10px"}}>App Manager</Button>
       </div>
     </div>
   );
