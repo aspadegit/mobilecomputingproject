@@ -92,7 +92,10 @@ function Apps() {
         <Button variant="primary" onClick={() => setShowModal(false)}>
             Start New App
           </Button>
-          <input style={{ marginLeft: "10px", marginTop: "10px" }} type="file" onChange={handleFileUpload} />
+          <input style={{ display: 'none' }} type="file" id="fileInput" onChange={handleFileUpload} />
+          <label htmlFor="fileInput" style={{ marginLeft: "10px", marginTop: "10px", cursor: 'pointer', padding: '6px 12px', backgroundColor: 'lightgray', color: 'black', borderRadius: '4px', border: '1px solid black' }}>
+            Choose File from This Computer
+          </label>
         </Modal.Footer>
       </Modal>
 
@@ -103,10 +106,13 @@ function Apps() {
       <div>
         {/* Save app */}
         <Button onClick={handleSaveApp} disabled={appSaved}>
-          {appSaved ? 'App Saved' : 'Save App'}
+          Download App to This Computer
         </Button>
         {/* Input file */}
-        <input style={{ marginLeft: "10px", marginTop: "10px" }} type="file" onChange={handleFileUpload} />
+        <input style={{ display: 'none' }} type="file" id="fileInput" onChange={handleFileUpload} />
+          <label htmlFor="fileInput" style={{ marginLeft: "10px", marginTop: "10px", cursor: 'pointer', padding: '6px 12px', backgroundColor: 'lightgray', color: 'black', borderRadius: '4px', border: '1px solid black' }}>
+            Choose File from This Computer
+        </label>
         {/* App Manager */}
         <Button variant="secondary" onClick={() => setShowManager(true)} style={{float:'right', marginTop: "10px"}}>App Manager</Button>
       </div>
