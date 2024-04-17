@@ -12,9 +12,10 @@ function Apps() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [showModal, setShowModal] = useState(true);
   const [showManager, setShowManager] = useState(false);
+  const [toolboxXml, setToolboxXml] = useState(null);
 
   useEffect(() => {
-    const toolboxXml = `
+    const initialToolboxXml  = `
       <xml id="toolbox" style="display: none">
         <category name="Logic" colour="#5C81A6">
           <block type="logic_compare"></block>
@@ -36,6 +37,8 @@ function Apps() {
         <category name="Variables" colour="#A65C81" custom="VARIABLE"></category>
       </xml>
     `;
+
+    setToolboxXml(initialToolboxXml)
   
     const workspace = Blockly.inject(workspaceRef.current, {
       toolbox: toolboxXml,
@@ -58,22 +61,46 @@ function Apps() {
       const blob = new Blob([xmlText], { type: 'text/xml' });
       saveAs(blob, fileName);
       setAppSaved(true);
-  }
-
+      console.log('Saved file content:', xmlText);
+    }
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = (fileContent) => {
+    // Parse the file content and set it to the Blockly workspace
+    console.log('Uploaded file content:', fileContent);
+    // Check if the textToDom function exists in the Xml namespace
+    if (Blockly.Xml && Blockly.Xml.textToDom) {
+      const xmlDom = Blockly.Xml.textToDom(fileContent);
+      Blockly.getMainWorkspace().clear();
+      Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
+      // Force Blockly to update the toolbox and redraw the workspace
+      Blockly.getMainWorkspace().updateToolbox(toolboxXml);
+    } else {
+      console.error('Blockly version not supported. Unable to parse XML text.');
+    }
+  };
+
+  const handleFileUploadFromComputer = (e) => {
     const file = e.target.files[0];
-  if (file) {
-    setUploadedFile(file);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const fileContent = event.target.result;
-      // You can process the file content here
-      console.log('Uploaded file content:', fileContent);
-    };
-    reader.readAsText(file);
-  }
+    if (file) {
+      setUploadedFile(file);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const fileContent = event.target.result;
+        // You can process the file content here
+        console.log('Uploaded file content:', fileContent);
+        if (Blockly.Xml && Blockly.Xml.textToDom) {
+          const xmlDom = Blockly.Xml.textToDom(fileContent);
+          Blockly.getMainWorkspace().clear();
+          Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
+          // Force Blockly to update the toolbox and redraw the workspace
+          Blockly.getMainWorkspace().updateToolbox(toolboxXml);
+        } else {
+          console.error('Blockly version not supported. Unable to parse XML text.');
+        }
+      };
+      reader.readAsText(file);
+    }
   };
 
   return (
@@ -92,14 +119,14 @@ function Apps() {
         <Button variant="primary" onClick={() => setShowModal(false)}>
             Start New App
           </Button>
-          <input style={{ display: 'none' }} type="file" id="fileInput" onChange={handleFileUpload} />
-          <label htmlFor="fileInput" style={{ marginLeft: "10px", marginTop: "10px", cursor: 'pointer', padding: '6px 12px', backgroundColor: 'lightgray', color: 'black', borderRadius: '4px', border: '1px solid black' }}>
+          <input style={{ display: 'none' }} type="file" id="fileInputFromComputer" onChange={handleFileUploadFromComputer} />
+          <label htmlFor="fileInputFromComputer" style={{ marginLeft: "10px", marginTop: "10px", cursor: 'pointer', padding: '6px 12px', backgroundColor: 'lightgray', color: 'black', borderRadius: '4px', border: '1px solid black' }}>
             Choose File from This Computer
           </label>
         </Modal.Footer>
       </Modal>
 
-      <AppManager show={showManager} onClose={() => setShowManager(false)} />
+      <AppManager show={showManager} onClose={() => setShowManager(false)} onFileUpload={handleFileUpload}/>
 
       {/* Blockly */}
       <div ref={workspaceRef} style={{ height: '84vh', width: '98vw' }} />
@@ -109,8 +136,8 @@ function Apps() {
           Download App to This Computer
         </Button>
         {/* Input file */}
-        <input style={{ display: 'none' }} type="file" id="fileInput" onChange={handleFileUpload} />
-          <label htmlFor="fileInput" style={{ marginLeft: "10px", marginTop: "10px", cursor: 'pointer', padding: '6px 12px', backgroundColor: 'lightgray', color: 'black', borderRadius: '4px', border: '1px solid black' }}>
+        <input style={{ display: 'none' }} type="file" id="fileInputFromComputer" onChange={handleFileUploadFromComputer} />
+          <label htmlFor="fileInputFromComputer" style={{ marginLeft: "10px", marginTop: "10px", cursor: 'pointer', padding: '6px 12px', backgroundColor: 'lightgray', color: 'black', borderRadius: '4px', border: '1px solid black' }}>
             Choose File from This Computer
         </label>
         {/* App Manager */}

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Button, Modal, Card } from 'react-bootstrap';
 import { Trash } from 'react-bootstrap-icons';
+import Blockly from 'blockly';
 
-function AppManager({ show, onClose }) {
+function AppManager({ show, onClose, onFileUpload  }) {
     const [isActive, setIsActive] = useState(false);
     const [apps, setApps] = useState([]);
 
@@ -25,9 +26,19 @@ function AppManager({ show, onClose }) {
     };
 
     const handleAddApp = () => {
-        // Logic to add a new app to the list
-        const newApp = `App ${apps.length + 1}`;
-        setApps([...apps, newApp]);
+        const appName = prompt("Enter a name for the app:");
+        if (appName) {
+            // Get XML data of the Blockly workspace
+            const xml = Blockly.Xml.workspaceToDom(Blockly.getMainWorkspace());
+            const xmlText = Blockly.Xml.domToText(xml);
+            const newApp = { name: appName, xml: xmlText };
+            // Add the new app object to the apps array
+            setApps([...apps, newApp]);
+        }
+    };
+
+    const handleUploadApp = (index) => {
+        onFileUpload(apps[index].xml);
     };
 
   return (
@@ -43,9 +54,9 @@ function AppManager({ show, onClose }) {
             {apps.map((app, index) => (
                 <li key={index}>
                 <Card style={{margin: '10px', display: 'flex', alignItems: 'center', padding: '10px'}}>
-                    <span style={{marginRight: 'auto', maxWidth:'100px'}}>{app}</span>
+                    <span style={{marginRight: 'auto'}}>{app.name}</span>
                     <div style={{ marginLeft: 'auto' }}>
-                        <Button variant="primary" style={{ marginRight: '5px' }}>Upload</Button>
+                        <Button variant="primary" style={{ marginRight: '5px' }} onClick={() => handleUploadApp(index)}>Upload</Button>
                         <Button variant="secondary" onClick={() => handleDeleteApp(index)}><Trash /></Button>
                     </div>
                 </Card>
