@@ -1,5 +1,6 @@
 import React from "react";
 import Card from 'react-bootstrap/Card';
+import { Spinner } from "react-bootstrap";
 
 let tempArray = [{name: "def 2"}, {name: "abc"}, {name: "bcd"}]
 tempArray.sort(compare)
@@ -14,19 +15,36 @@ function compare( a, b ) { //put services in alphabetical order
   return 0;
 }
 
-function Services() {
+const loading = () => {
+  return (
+    <div style={{display: "flex", flexDirection: "row"}}>
+      <div>Scanning for Services...</div>
+      <Spinner animation="border" variant="primary" style={{marginLeft: "10px"}}/>  
+    </div>
+  );
+}
+
+const mapServices = (services) => {
+  return (
+    <div>
+      {services.map((item, index) => (
+      <Card style={{ width: '90vh', marginTop: "10px", borderColor:"black"}}>
+        <Card.Body>
+          Service Name: {item.name}
+        </Card.Body>
+      </Card>
+      ))}
+    </div>
+  );
+}
+
+function Services({services}) {
   return (
     <div style={{display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"}}>
       <div>
         <h1 style={{textAlign: "center", marginTop:"10px"}}>Services</h1>
       </div>
-      {tempArray.map((item, index) => (
-        <Card style={{ width: '90vh', marginTop: "10px", borderColor:"black"}}>
-          <Card.Body>
-            Service Name: {item.name}
-          </Card.Body>
-        </Card>
-        ))}
+      {services.length === 0 ? loading() : mapServices(services)}
     </div>
   );  
   }
