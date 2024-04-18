@@ -69,6 +69,7 @@ function Apps() {
     } catch (e) {
       console.error("invalid xml");
     }
+    setShowManager(false);
   };
 
   const handleFileUploadFromComputer = (e) => {
@@ -90,6 +91,7 @@ function Apps() {
           console.error("invalid xml");
         }
       };
+      setShowModal(false);
       reader.readAsText(file);
     }
   };
