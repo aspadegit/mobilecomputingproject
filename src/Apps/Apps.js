@@ -66,6 +66,7 @@ function Apps() {
       Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
       // Force Blockly to update the toolbox and redraw the workspace
       Blockly.getMainWorkspace().updateToolbox(toolboxXml);
+      setShowManager(false);
     } catch (e) {
       console.error("invalid xml");
     }
@@ -86,6 +87,7 @@ function Apps() {
           Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
           // Force Blockly to update the toolbox and redraw the workspace
           Blockly.getMainWorkspace().updateToolbox(toolboxXml);
+          setShowModal(false);
         } catch (e) {
           console.error("invalid xml");
         }
