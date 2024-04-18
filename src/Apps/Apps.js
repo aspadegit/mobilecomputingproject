@@ -60,12 +60,12 @@ function Apps() {
     console.log('Uploaded file content:', fileContent);
     // Check if the textToDom function exists in the Xml namespace
     try{
-      let xmlDom = Blockly.Xml.textToDom(fileContent);
+      let xmlDom = Blockly.utils.xml.textToDom(fileContent);
       Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
       // Force Blockly to update the toolbox and redraw the workspace
       Blockly.getMainWorkspace().updateToolbox(toolboxXml);
     } catch (e) {
-      console.error("invalid xm");
+      console.error("invalid xml");
     }
   };
 
@@ -79,13 +79,13 @@ function Apps() {
         // You can process the file content here
         console.log('Uploaded file content:', fileContent);
         try{
-          let xmlDom = Blockly.Xml.textToDom(fileContent);
-          Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
+          let xmlDom = Blockly.utils.xml.textToDom(fileContent);
           Blockly.getMainWorkspace().clear();
+          Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
           // Force Blockly to update the toolbox and redraw the workspace
           Blockly.getMainWorkspace().updateToolbox(toolboxXml);
         } catch (e) {
-          console.error("invalid xm");
+          console.error("invalid xml");
         }
       };
       reader.readAsText(file);
