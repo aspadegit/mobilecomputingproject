@@ -17,8 +17,9 @@ const mapThings = (things) => {
     {things.map((item, index) => (
       <Card style={{ width: '90vh', marginTop: "10px", borderColor:"black"}}>
         <Card.Body>
-          Thing ip: {item.ip}
-          Thing id: {item.thingID}
+          <strong>IP: </strong> {item.ip}
+          <br/>
+          <strong>ID: </strong>{item.thingID}
         </Card.Body>
       </Card>
       ))}

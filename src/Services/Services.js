@@ -30,7 +30,14 @@ const mapServices = (services) => {
       {services.map((item, index) => (
       <Card style={{ width: '90vh', marginTop: "10px", borderColor:"black"}}>
         <Card.Body>
-          Service Name: {item.name}
+          <strong>Thing ID: </strong> {item.thingID}
+          <br/>
+          <strong>Name: </strong> {item.serviceName}
+          <br/>
+          <strong>Inputs: </strong> {item.serviceInput.map((input, index2) => (
+              <div key={index2} style={{paddingLeft: '20px'}}>&#8226;{input}</div>
+            ))}
+          <strong>Output: </strong> {item.serviceOutput}
         </Card.Body>
       </Card>
       ))}
