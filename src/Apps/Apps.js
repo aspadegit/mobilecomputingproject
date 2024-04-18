@@ -12,34 +12,24 @@ function Apps() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [showModal, setShowModal] = useState(true);
   const [showManager, setShowManager] = useState(false);
-  const [toolboxXml, setToolboxXml] = useState(null);
+  const [toolboxXml, setToolboxXml] = useState(`
+  <xml id="toolbox" style="display: none;">
+    <category name="Sequential" colour="#5CA65C">
+      <block type="controls_repeat_ext"></block>
+      <block type="controls_whileUntil"></block>
+    </category>
+    <category name="Order-Based" colour="#5C68A6">
+      <block type="math_number"></block>
+      <block type="math_arithmetic"></block>
+    </category>
+    <category name="Conditional" colour="#5CA68D">
+      <block type="text"></block>
+      <block type="text_length"></block>
+    </category>
+  </xml>
+  `);
 
-  useEffect(() => {
-    const initialToolboxXml  = `
-      <xml id="toolbox" style="display: none">
-        <category name="Logic" colour="#5C81A6">
-          <block type="logic_compare"></block>
-          <block type="logic_operation"></block>
-          <block type="logic_negate"></block>
-        </category>
-        <category name="Loops" colour="#5CA65C">
-          <block type="controls_repeat_ext"></block>
-          <block type="controls_whileUntil"></block>
-        </category>
-        <category name="Math" colour="#5C68A6">
-          <block type="math_number"></block>
-          <block type="math_arithmetic"></block>
-        </category>
-        <category name="Text" colour="#5CA68D">
-          <block type="text"></block>
-          <block type="text_length"></block>
-        </category>
-        <category name="Variables" colour="#A65C81" custom="VARIABLE"></category>
-      </xml>
-    `;
-
-    setToolboxXml(initialToolboxXml)
-  
+  useEffect(() => { 
     const workspace = Blockly.inject(workspaceRef.current, {
       toolbox: toolboxXml,
     });
@@ -71,14 +61,13 @@ function Apps() {
     // Parse the file content and set it to the Blockly workspace
     console.log('Uploaded file content:', fileContent);
     // Check if the textToDom function exists in the Xml namespace
-    if (Blockly.Xml && Blockly.Xml.textToDom) {
-      const xmlDom = Blockly.Xml.textToDom(fileContent);
-      Blockly.getMainWorkspace().clear();
+    try{
+      let xmlDom = Blockly.utils.xml.textToDom(fileContent);
       Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
       // Force Blockly to update the toolbox and redraw the workspace
       Blockly.getMainWorkspace().updateToolbox(toolboxXml);
-    } else {
-      console.error('Blockly version not supported. Unable to parse XML text.');
+    } catch (e) {
+      console.error("invalid xml");
     }
   };
 
@@ -91,14 +80,14 @@ function Apps() {
         const fileContent = event.target.result;
         // You can process the file content here
         console.log('Uploaded file content:', fileContent);
-        if (Blockly.Xml && Blockly.Xml.textToDom) {
-          const xmlDom = Blockly.Xml.textToDom(fileContent);
+        try{
+          let xmlDom = Blockly.utils.xml.textToDom(fileContent);
           Blockly.getMainWorkspace().clear();
           Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
           // Force Blockly to update the toolbox and redraw the workspace
           Blockly.getMainWorkspace().updateToolbox(toolboxXml);
-        } else {
-          console.error('Blockly version not supported. Unable to parse XML text.');
+        } catch (e) {
+          console.error("invalid xml");
         }
       };
       reader.readAsText(file);
