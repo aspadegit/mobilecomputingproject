@@ -34,6 +34,8 @@ const mapServices = (services) => {
           <br/>
           <strong>Name: </strong> {item.serviceName}
           <br/>
+          <strong>Entity ID: </strong> {item.entityID}
+          <br/>
           <strong>Inputs: </strong> {item.serviceInput.map((input, index2) => (
               <div key={index2} style={{paddingLeft: '20px'}}>&#8226;{input}</div>
             ))}
