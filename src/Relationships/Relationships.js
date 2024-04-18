@@ -58,7 +58,7 @@ function Relationships({ services }) {
 
   return (
     <div>
-      <h1 style={{textAlign: "center", marginTop:"10px"}}>Relationships</h1>
+      <h1 style={{textAlign: "center", marginTop:"10px"}}>Your Relationships</h1>
 
       {relationships.length === 0 && (
         <div style={{ textAlign: "center", marginTop: "20px" }}>

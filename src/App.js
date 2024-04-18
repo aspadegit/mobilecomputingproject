@@ -7,7 +7,6 @@ import Things from './Things';
 import NavigationBar from './NavigationBar';
 import axios from 'axios';
 
-
 function App() {
 
   const [things, setThings] = useState([]);
