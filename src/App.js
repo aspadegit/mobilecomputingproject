@@ -18,7 +18,6 @@ function App() {
     const dataTimer = setInterval(() => {
       axios.get('http://localhost:3001/getThings') 
       .then(response => {
-        console.log(response.data)
         setThings(response.data);
       })
       .catch(error => {
@@ -32,7 +31,6 @@ function App() {
     const dataTimer = setInterval(() => {
       axios.get('http://localhost:3001/getServices') 
       .then(response => {
-        console.log(response.data)
         setServices(response.data);
       })
       .catch(error => {
