@@ -26,14 +26,16 @@ function AppManager({ show, onClose, onFileUpload  }) {
     };
 
     const handleAddApp = () => {
-        const appName = prompt("Enter a name for the app:");
-        if (appName) {
+        const appName = prompt("Enter a file name (including .iot extension):");
+        if (appName && appName.trim().endsWith('iot')) {
             // Get XML data of the Blockly workspace
             const xml = Blockly.Xml.workspaceToDom(Blockly.getMainWorkspace());
             const xmlText = Blockly.Xml.domToText(xml);
             const newApp = { name: appName, xml: xmlText };
             // Add the new app object to the apps array
             setApps([...apps, newApp]);
+        } else if (appName) {
+            alert("The file name must end with '.iot'");
         }
     };
 
