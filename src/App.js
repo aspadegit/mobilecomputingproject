@@ -46,7 +46,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Things things={things}/>} />
           <Route path="/Services" element={<Services services={services}/>} />
-          <Route path="/Relationships" element={<Relationships relationships={relationships}/>} />
+          <Route path="/Relationships" element={<Relationships services={services}/>} />
           <Route path="/Apps" element={<Apps/>} />
         </Routes>
     </Router>
