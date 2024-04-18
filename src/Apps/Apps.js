@@ -63,6 +63,7 @@ function Apps() {
     // Check if the textToDom function exists in the Xml namespace
     try{
       let xmlDom = Blockly.utils.xml.textToDom(fileContent);
+      Blockly.getMainWorkspace().clear();
       Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
       // Force Blockly to update the toolbox and redraw the workspace
       Blockly.getMainWorkspace().updateToolbox(toolboxXml);
