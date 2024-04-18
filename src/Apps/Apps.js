@@ -44,15 +44,17 @@ function Apps() {
   }, []);
 
   const handleSaveApp = () => {
-    const fileName = prompt("Enter a file name (including extension):", "app.iot");
-    if (fileName !== null && fileName !== "") {
+    const fileName = prompt("Enter a file name (including .iot extension):");
+    if (fileName !== null && fileName !== "" && fileName.trim().endsWith('.iot')) {
       const xml = Blockly.Xml.workspaceToDom(Blockly.getMainWorkspace());
       const xmlText = Blockly.Xml.domToText(xml);
       const blob = new Blob([xmlText], { type: 'text/xml' });
       saveAs(blob, fileName);
       setAppSaved(true);
       console.log('Saved file content:', xmlText);
-    }
+    } else if (fileName) {
+      alert("The file name must end with '.iot'");
+  }
   };
 
   const handleFileUpload = (fileContent) => {
