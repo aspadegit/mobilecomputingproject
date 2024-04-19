@@ -203,7 +203,7 @@ function Apps({apps, setApps, relationships}) {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [showModal, setShowModal] = useState(true);
   const [showManager, setShowManager] = useState(false);
-  const [relationShipBlocks, setRelationshipBlocks] = useState([])
+  const [relationshipBlocks, setRelationshipBlocks] = useState([])
 
   useEffect(() => { 
     console.log("relationships", relationships)
@@ -224,7 +224,7 @@ function Apps({apps, setApps, relationships}) {
           this.contextMenu = false;
         }
       };
-      setRelationshipBlocks([...relationShipBlocks, relationships[i].name])
+      setRelationshipBlocks([...relationshipBlocks, relationships[i].name])
       newXML += `<block type="${relationships[i].name}"></block>`
     }
     newXML += `</category>`
@@ -235,13 +235,55 @@ function Apps({apps, setApps, relationships}) {
         <block type="controls_repeat_ext"></block>
         <block type="controls_whileUntil"></block>
       </category>
-      <category name="Order-Based" colour="#5C68A6">
-        <block type="math_number"></block>
-        <block type="math_arithmetic"></block>
-      </category>
-      ${newXML}
-    </xml>
-    `
+      <category name="Order-Based" colour="#5C68A6">`;
+      relationships.forEach((relationship) => {
+        if (relationship.type === 'orderBased') {
+          Blockly.Blocks[`${relationship.name}_orderBased`] = {
+            init: function () {
+              this.appendDummyInput()
+                .appendField(relationship.service1)
+                .appendField("then")
+                .appendField(relationship.service2);
+              this.setPreviousStatement(true, null);
+              this.setNextStatement(true, null);
+              this.setColour("#5C68A6");
+              this.setTooltip("");
+              this.setHelpUrl("");
+            },
+          };
+          fullXml += `<block type="${relationship.name}_orderBased"></block>`;
+        }
+      });
+
+      fullXml += `
+          </category>
+          <category name="Conditional" colour="#5CA68D">`;
+
+      // Add blocks for each relationship under "Conditional"
+      relationships.forEach((relationship) => {
+        if (relationship.type !== 'orderBased') {
+          Blockly.Blocks[`${relationship.name}_conditional`] = {
+            init: function () {
+              this.appendDummyInput()
+                .appendField("If")
+                .appendField(relationship.service1)
+                .appendField("then")
+                .appendField(relationship.service2);
+              this.setPreviousStatement(true, null);
+              this.setNextStatement(true, null);
+              this.setColour("#5CA68D");
+              this.setTooltip("");
+              this.setHelpUrl("");
+            },
+          };
+          fullXml += `<block type="${relationship.name}_conditional"></block>`;
+        }
+      });
+
+      fullXml += `
+          </category>
+        </xml>`;
+    
       
     const workspace = Blockly.inject(workspaceRef.current, {
       toolbox: fullXml,
