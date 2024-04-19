@@ -6,6 +6,196 @@ import { saveAs } from 'file-saver';
 import { Modal } from 'react-bootstrap'
 import AppManager from '../AppManager';
 
+Blockly.Blocks['service_block'] = {
+  // Container.
+  init: function() {
+    this.setColour(230);
+    this.appendDummyInput()
+        .appendField('SERVICE NAME', 'SERVICE_NAME');
+    this.appendValueInput('SERVICE_PARAM_INPUT')
+        .appendField('Parameters: ');
+    this.setNextStatement(true);
+    this.setPreviousStatement(true);
+    this.setTooltip('Service block.');
+    this.contextMenu = false;
+  }
+};
+
+Blockly.Blocks['field_dropdown_container'] = {
+  // Container.
+  init: function() {
+    this.setColour(160);
+    this.appendDummyInput()
+        .appendField('add options');
+    this.appendStatementInput('STACK');
+    this.setTooltip('Add, remove, or reorder options\n' +
+                    'to reconfigure this dropdown menu.');
+    this.contextMenu = false;
+  }
+};
+
+Blockly.Blocks['field_dropdown_option_text'] = {
+  // Add text option.
+  init: function() {
+    this.setColour(160);
+    this.appendDummyInput()
+        .appendField('text option');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Add a new text option to the dropdown menu.');
+    this.setHelpUrl('https://www.youtube.com/watch?v=s2_xaEvcVI0#t=386');
+    this.contextMenu = false;
+  }
+};
+Blockly.Blocks['field_dropdown'] = {
+  // Dropdown menu.
+  init: function() {
+    this.appendDummyInput()
+        .appendField('parameters')
+    this.optionList_ = ['text'];
+    this.updateShape_();
+    this.setOutput(true, this.userData_);
+    this.setMutator(new Blockly.icons.MutatorIcon(['field_dropdown_option_text'], this));
+    this.setColour(160);
+    this.setTooltip('Dropdown menu with a list of options.');
+  },
+  mutationToDom: function(workspace) {
+    // Create XML to represent menu options.
+    var container = Blockly.utils.xml.createElement('mutation');
+    container.setAttribute('options', JSON.stringify(this.optionList_));
+    return container;
+  },
+  domToMutation: function(container) {
+    // Parse XML to restore the menu options.
+    var value = JSON.parse(container.getAttribute('options'));
+    if (typeof value === 'number') {
+      // Old format from before images were added.  November 2016.
+      this.optionList_ = [];
+      for (var i = 0; i < value; i++) {
+        this.optionList_.push('text');
+      }
+    } else {
+      this.optionList_ = value;
+    }
+    this.updateShape_();
+  },
+  decompose: function(workspace) {
+    // Populate the mutator's dialog with this block's components.
+    var containerBlock = workspace.newBlock('field_dropdown_container');
+    containerBlock.initSvg();
+    var connection = containerBlock.getInput('STACK').connection;
+    for (var i = 0; i < this.optionList_.length; i++) {
+      var optionBlock = workspace.newBlock(
+          'field_dropdown_option_' + this.optionList_[i]);
+      optionBlock.initSvg();
+      connection.connect(optionBlock.previousConnection);
+      connection = optionBlock.nextConnection;
+    }
+    return containerBlock;
+  },
+  compose: function(containerBlock) {
+    // Reconfigure this block based on the mutator dialog's components.
+    var optionBlock = containerBlock.getInputTargetBlock('STACK');
+    // Count number of inputs.
+    this.optionList_.length = 0;
+    var data = [];
+    while (optionBlock) {
+      if (optionBlock.type === 'field_dropdown_option_text') {
+        this.optionList_.push('text');
+      }
+      data.push(optionBlock.userData_);
+      optionBlock = optionBlock.nextConnection &&
+          optionBlock.nextConnection.targetBlock();
+    }
+    this.updateShape_();
+    // Restore any data.
+    for (var i = 0; i < this.optionList_.length; i++) {
+      var userData = data[i];
+      if (userData !== undefined) {
+          this.setFieldValue(userData || '0', 'USER' + i);
+      }
+    }
+  },
+  saveConnections: function(containerBlock) {
+    // Store all data for each option.
+    var optionBlock = containerBlock.getInputTargetBlock('STACK');
+    var i = 0;
+    while (optionBlock) {
+      optionBlock.userData_ = this.getUserData(i);
+      i++;
+      optionBlock = optionBlock.nextConnection &&
+          optionBlock.nextConnection.targetBlock();
+    }
+  },
+  updateShape_: function() {
+    // Delete everything.
+    var i = 0;
+    while (this.getInput('OPTION' + i)) {
+      this.removeInput('OPTION' + i);
+      this.removeInput('OPTION_IMAGE' + i, true);
+      i++;
+    }
+    // Rebuild block.
+    var src = 'https://www.gstatic.com/codesite/ph/images/star_on.gif';
+    for (var i = 0; i <= this.optionList_.length; i++) {
+      var type = this.optionList_[i];
+      if (type === 'text') {
+        this.appendDummyInput('OPTION' + i)
+            .appendField('•')
+            .appendField('Parameter '+ i +':')
+            .appendField(new Blockly.FieldNumber(), 'USER' + i);
+      }
+    }
+  },
+  onchange: function() {
+    if (this.workspace && this.optionList_.length < 1) {
+      this.setWarningText('Drop down menu must\nhave at least one option.');
+    } else {
+      fieldNameCheck(this);
+    }
+  },
+  getUserData: function(n) {
+    if (this.optionList_[n] === 'text') {
+      return this.getFieldValue('USER' + n);
+    }
+   
+    throw 'Unknown dropdown type';
+  }
+
+};
+
+Blockly.Blocks['start_block'] =
+{
+  init: function() {
+    this.setColour(315);
+    this.appendDummyInput()
+        .appendField('Start');
+    this.appendStatementInput('START_STATEMENT_INPUT')
+    this.setTooltip('Drag blocks into here to start the program');
+    this.contextMenu = false;
+  }
+};
+
+function fieldNameCheck(referenceBlock) {
+  if (!referenceBlock.workspace) {
+    // Block has been deleted.
+    return;
+  }
+  var name = referenceBlock.name
+  var count = 0;
+  var blocks = referenceBlock.workspace.getAllBlocks(false);
+  for (var i = 0, block; block = blocks[i]; i++) {
+    var otherName = block.getFieldValue('FIELDNAME');
+    if (!block.disabled && !block.getInheritedDisabled() &&
+        otherName && otherName.toLowerCase() === name) {
+      count++;
+    }
+  }
+  var msg = (count > 1) ?
+      'There are ' + count + ' field blocks\n with this name.' : null;
+  referenceBlock.setWarningText(msg);
+}
+
 function Apps() {
   const workspaceRef = useRef(null);
   const [appSaved, setAppSaved] = useState(false);
@@ -25,9 +215,15 @@ function Apps() {
     <category name="Conditional" colour="#5CA68D">
       <block type="text"></block>
       <block type="text_length"></block>
+      <block type="field_dropdown"></block>
+      <block type="service_block"></block>
+      <block type="start_block"></block>
     </category>
   </xml>
   `);
+
+ 
+  
 
   useEffect(() => { 
     const workspace = Blockly.inject(workspaceRef.current, {
