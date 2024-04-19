@@ -1,12 +1,12 @@
 // Apps.js
-import React, { useRef, useEffect, useState, useLayoutEffect} from 'react';
+import React, { useRef, useEffect, useState} from 'react';
 import Blockly from 'blockly';
 import { Button } from 'react-bootstrap';
 import { saveAs } from 'file-saver';
 import { Modal } from 'react-bootstrap'
 import AppManager from '../AppManager';
 
-Blockly.Blocks['service_block'] = {
+Blockly.Blocks['service_block_sequential'] = {
   // Container.
   init: function() {
     this.setColour(230);
@@ -18,6 +18,34 @@ Blockly.Blocks['service_block'] = {
     this.setPreviousStatement(true);
     this.setTooltip('Service block.');
     this.contextMenu = false;
+  }
+};
+
+Blockly.Blocks['service_block_order'] = {
+  // Container.
+  init: function() {
+    this.setColour(230);
+    this.appendDummyInput()
+        .appendField('SERVICE NAME', 'SERVICE_NAME');
+    this.appendValueInput('SERVICE_PARAM_INPUT')
+        .appendField('Parameters: ');
+    this.setTooltip('Service block.');
+    this.setOutput(true, [this, this.getChildren(false)]);
+    this.contextMenu = false;
+  }
+};
+
+Blockly.Blocks['relationship_block'] = {
+  init: function() {
+    this.setColour(0);
+    this.appendDummyInput()
+      .appendField('If');
+    this.appendValueInput('FIRST_STATEMENT')
+    this.appendDummyInput()
+      .appendField('then');
+    this.appendValueInput('SECOND_STATEMENT')
+    this.setNextStatement(true);
+    this.setPreviousStatement(true);
   }
 };
 
@@ -197,17 +225,18 @@ function fieldNameCheck(referenceBlock) {
   referenceBlock.setWarningText(msg);
 }
 
-function Apps({apps, setApps, relationships}) {
+function Apps({apps, setApps, relationships, services}) {
   const workspaceRef = useRef(null);
   const [appSaved, setAppSaved] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [showModal, setShowModal] = useState(true);
   const [showManager, setShowManager] = useState(false);
-  const [relationShipBlocks, setRelationshipBlocks] = useState([])
 
   useEffect(() => { 
     console.log("relationships", relationships)
-    let newXML = `<category name="Conditional" colour="#5CA68D">`
+    let serviceXML = `<category name="Sequential" colour="#5CA65C">`
+    let orderBasedXML = `<category name="Order-Based" colour="#5C68A6">`
+    let conditionalXML = `<category name="Conditional" colour="#5CA68D">`
 
     for(let i = 0; i < relationships.length; i++){
       Blockly.Blocks[relationships[i].name] = {
@@ -224,22 +253,37 @@ function Apps({apps, setApps, relationships}) {
           this.contextMenu = false;
         }
       };
-      setRelationshipBlocks([...relationShipBlocks, relationships[i].name])
-      newXML += `<block type="${relationships[i].name}"></block>`
+      relationships[i].type === "orderBased" ? orderBasedXML += `<block type="${relationships[i].name}"></block>` : conditionalXML += `<block type="${relationships[i].name}"></block>`
     }
-    newXML += `</category>`
+
+    console.log(services)
+
+    for(let i = 0; i < services.length; i++){
+      Blockly.Blocks[services[i].serviceName] = {
+        // Container.
+        init: function() {
+          this.setColour(230);
+          this.appendDummyInput()
+              .appendField(services[i].serviceName, 'SERVICE_NAME');
+          this.appendValueInput('SERVICE_PARAM_INPUT')
+              .appendField('Parameters: ');
+          this.setNextStatement(true);
+          this.setPreviousStatement(true);
+          this.setTooltip('Service block.');
+          this.contextMenu = false;
+        }
+      };
+      serviceXML += `<block type="${services[i].serviceName}"></block>`
+    }
+    serviceXML += `</category>`
+    orderBasedXML += `</category>`
+    conditionalXML += `</category>`
 
     let fullXml = `
     <xml id="toolbox" style="display: none;">
-      <category name="Sequential" colour="#5CA65C">
-        <block type="controls_repeat_ext"></block>
-        <block type="controls_whileUntil"></block>
-      </category>
-      <category name="Order-Based" colour="#5C68A6">
-        <block type="math_number"></block>
-        <block type="math_arithmetic"></block>
-      </category>
-      ${newXML}
+      ${serviceXML}
+      ${orderBasedXML}
+      ${conditionalXML}
     </xml>
     `
       

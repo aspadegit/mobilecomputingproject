@@ -47,7 +47,7 @@ function App() {
           <Route path="/" element={<Things things={things}/>} />
           <Route path="/Services" element={<Services services={services}/>} />
           <Route path="/Relationships" element={<Relationships setRelationships={setRelationships} relationships={relationships} services={services}/>} />
-          <Route path="/Apps" element={<Apps apps={apps} setApps={setApps} relationships={relationships}/>} />
+          <Route path="/Apps" element={<Apps apps={apps} setApps={setApps} relationships={relationships} services={services}/>} />
         </Routes>
     </Router>
   );
