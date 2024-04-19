@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 import { Modal } from 'react-bootstrap'
 import AppManager from '../AppManager';
 
-Blockly.Blocks['service_block'] = {
+Blockly.Blocks['service_block_sequential'] = {
   // Container.
   init: function() {
     this.setColour(230);
@@ -20,6 +20,21 @@ Blockly.Blocks['service_block'] = {
     this.contextMenu = false;
   }
 };
+
+Blockly.Blocks['service_block_order'] = {
+  // Container.
+  init: function() {
+    this.setColour(230);
+    this.appendDummyInput()
+        .appendField('SERVICE NAME', 'SERVICE_NAME');
+    this.appendValueInput('SERVICE_PARAM_INPUT')
+        .appendField('Parameters: ');
+    this.setTooltip('Service block.');
+    this.setOutput(true, [this, this.getChildren(false)]);
+    this.contextMenu = false;
+  }
+};
+
 
 Blockly.Blocks['field_dropdown_container'] = {
   // Container.
