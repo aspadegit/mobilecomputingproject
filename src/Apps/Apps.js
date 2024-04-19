@@ -35,6 +35,20 @@ Blockly.Blocks['service_block_order'] = {
   }
 };
 
+Blockly.Blocks['relationship_block'] = {
+  init: function() {
+    this.setColour(0);
+    this.appendDummyInput()
+      .appendField('If');
+    this.appendValueInput('FIRST_STATEMENT')
+    this.appendDummyInput()
+      .appendField('then');
+    this.appendValueInput('SECOND_STATEMENT')
+    this.setNextStatement(true);
+    this.setPreviousStatement(true);
+  }
+};
+
 
 Blockly.Blocks['field_dropdown_container'] = {
   // Container.
