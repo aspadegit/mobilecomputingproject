@@ -39,6 +39,11 @@ function Relationships({ relationships, setRelationships, services }) {
   };
 
   const addRelationship = () => {
+    const isNameDuplicate = relationships.some(relationship => relationship.name === relationshipName);
+    if (isNameDuplicate) {
+      alert('Relationship name already exists!');
+      return;
+    }
     const newRelationship = {
       name: relationshipName,
       type: relationshipType,

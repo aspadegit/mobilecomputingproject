@@ -65,13 +65,14 @@ function Apps({apps, setApps, relationships}) {
     // Check if the textToDom function exists in the Xml namespace
     try{
       let xmlDom = Blockly.utils.xml.textToDom(fileContent);
+      Blockly.getMainWorkspace().clear();
       Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
       // Force Blockly to update the toolbox and redraw the workspace
       Blockly.getMainWorkspace().updateToolbox(toolboxXml);
+      setShowManager(false);
     } catch (e) {
       console.error("invalid xml");
     }
-    setShowManager(false);
   };
 
   const handleFileUploadFromComputer = (e) => {
@@ -89,11 +90,11 @@ function Apps({apps, setApps, relationships}) {
           Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
           // Force Blockly to update the toolbox and redraw the workspace
           Blockly.getMainWorkspace().updateToolbox(toolboxXml);
+          setShowModal(false);
         } catch (e) {
           console.error("invalid xml");
         }
       };
-      setShowModal(false);
       reader.readAsText(file);
     }
   };
