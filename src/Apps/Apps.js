@@ -231,9 +231,11 @@ function Apps({apps, setApps, relationships, services}) {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [showModal, setShowModal] = useState(true);
   const [showManager, setShowManager] = useState(false);
+  const [relationshipBlocks, setRelationshipBlocks] = useState([])
 
   useEffect(() => { 
     console.log("relationships", relationships)
+    let newXML = `<category name="Conditional" colour="#5CA68D">`
     let serviceXML = `<category name="Sequential" colour="#5CA65C">`
     let orderBasedXML = `<category name="Order-Based" colour="#5C68A6">`
     let conditionalXML = `<category name="Conditional" colour="#5CA68D">`
@@ -254,6 +256,8 @@ function Apps({apps, setApps, relationships, services}) {
         }
       };
       relationships[i].type === "orderBased" ? orderBasedXML += `<block type="${relationships[i].name}"></block>` : conditionalXML += `<block type="${relationships[i].name}"></block>`
+      setRelationshipBlocks([...relationshipBlocks, relationships[i].name])
+      newXML += `<block type="${relationships[i].name}"></block>`
     }
 
     console.log(services)
@@ -286,9 +290,64 @@ function Apps({apps, setApps, relationships, services}) {
       ${conditionalXML}
     </xml>
     `
+    let mayaXML=
+`      <xml id="toolbox" style="display: none;">
+        <category name="Sequential" colour="#5CA65C">
+        <block type="controls_repeat_ext"></block>
+        <block type="controls_whileUntil"></block>
+      </category>
+      <category name="Order-Based" colour="#5C68A6">`;
+      relationships.forEach((relationship) => {
+        if (relationship.type === 'orderBased') {
+          Blockly.Blocks[`${relationship.name}_orderBased`] = {
+            init: function () {
+              this.appendDummyInput()
+                .appendField(relationship.service1)
+                .appendField("then")
+                .appendField(relationship.service2);
+              this.setPreviousStatement(true, null);
+              this.setNextStatement(true, null);
+              this.setColour("#5C68A6");
+              this.setTooltip("");
+              this.setHelpUrl("");
+            },
+          };
+          mayaXML += `<block type="${relationship.name}_orderBased"></block>`;
+        }
+      });
+
+      mayaXML += `
+          </category>
+          <category name="Conditional" colour="#5CA68D">`;
+
+      // Add blocks for each relationship under "Conditional"
+      relationships.forEach((relationship) => {
+        if (relationship.type !== 'orderBased') {
+          Blockly.Blocks[`${relationship.name}_conditional`] = {
+            init: function () {
+              this.appendDummyInput()
+                .appendField("If")
+                .appendField(relationship.service1)
+                .appendField("then")
+                .appendField(relationship.service2);
+              this.setPreviousStatement(true, null);
+              this.setNextStatement(true, null);
+              this.setColour("#5CA68D");
+              this.setTooltip("");
+              this.setHelpUrl("");
+            },
+          };
+          mayaXML += `<block type="${relationship.name}_conditional"></block>`;
+        }
+      });
+
+      mayaXML += `
+          </category>
+        </xml>`;
+    
       
     const workspace = Blockly.inject(workspaceRef.current, {
-      toolbox: fullXml,
+      toolbox: mayaXML,
     });
 
     workspace.addChangeListener(() => {
