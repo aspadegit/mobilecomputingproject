@@ -1,5 +1,5 @@
 // Apps.js
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useLayoutEffect} from 'react';
 import Blockly from 'blockly';
 import { Button } from 'react-bootstrap';
 import { saveAs } from 'file-saver';
@@ -20,6 +20,7 @@ Blockly.Blocks['service_block'] = {
     this.contextMenu = false;
   }
 };
+
 
 Blockly.Blocks['field_dropdown_container'] = {
   // Container.
@@ -202,34 +203,48 @@ function Apps({apps, setApps, relationships}) {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [showModal, setShowModal] = useState(true);
   const [showManager, setShowManager] = useState(false);
-  const [toolboxXml, setToolboxXml] = useState(`
-  <xml id="toolbox" style="display: none;">
-    <category name="Sequential" colour="#5CA65C">
-      <block type="controls_repeat_ext"></block>
-      <block type="controls_whileUntil"></block>
-    </category>
-    <category name="Order-Based" colour="#5C68A6">
-      <block type="math_number"></block>
-      <block type="math_arithmetic"></block>
-    </category>
-    <category name="Conditional" colour="#5CA68D">
-      <block type="text"></block>
-      <block type="text_length"></block>
-      <block type="field_dropdown"></block>
-      <block type="service_block"></block>
-      <block type="start_block"></block>
-    </category>
-  </xml>
-  `);
-
- 
-  
+  const [relationShipBlocks, setRelationshipBlocks] = useState([])
 
   useEffect(() => { 
     console.log("relationships", relationships)
-  
+    let newXML = `<category name="Conditional" colour="#5CA68D">`
+
+    for(let i = 0; i < relationships.length; i++){
+      Blockly.Blocks[relationships[i].name] = {
+        // Container.
+        init: function() {
+          this.setColour(230);
+          this.appendDummyInput()
+              .appendField(relationships[i].name, 'SERVICE_NAME');
+          this.appendValueInput('SERVICE_PARAM_INPUT')
+              .appendField('Parameters: ');
+          this.setNextStatement(true);
+          this.setPreviousStatement(true);
+          this.setTooltip('Service block.');
+          this.contextMenu = false;
+        }
+      };
+      setRelationshipBlocks([...relationShipBlocks, relationships[i].name])
+      newXML += `<block type="${relationships[i].name}"></block>`
+    }
+    newXML += `</category>`
+
+    let fullXml = `
+    <xml id="toolbox" style="display: none;">
+      <category name="Sequential" colour="#5CA65C">
+        <block type="controls_repeat_ext"></block>
+        <block type="controls_whileUntil"></block>
+      </category>
+      <category name="Order-Based" colour="#5C68A6">
+        <block type="math_number"></block>
+        <block type="math_arithmetic"></block>
+      </category>
+      ${newXML}
+    </xml>
+    `
+      
     const workspace = Blockly.inject(workspaceRef.current, {
-      toolbox: toolboxXml,
+      toolbox: fullXml,
     });
 
     workspace.addChangeListener(() => {
@@ -264,7 +279,7 @@ function Apps({apps, setApps, relationships}) {
       Blockly.getMainWorkspace().clear();
       Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
       // Force Blockly to update the toolbox and redraw the workspace
-      Blockly.getMainWorkspace().updateToolbox(toolboxXml);
+      // Blockly.getMainWorkspace().updateToolbox(toolboxXml);
       setShowManager(false);
     } catch (e) {
       console.error("invalid xml");
@@ -285,7 +300,6 @@ function Apps({apps, setApps, relationships}) {
           Blockly.getMainWorkspace().clear();
           Blockly.Xml.domToWorkspace(xmlDom, Blockly.getMainWorkspace());
           // Force Blockly to update the toolbox and redraw the workspace
-          Blockly.getMainWorkspace().updateToolbox(toolboxXml);
           setShowModal(false);
         } catch (e) {
           console.error("invalid xml");
