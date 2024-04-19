@@ -6,22 +6,9 @@ import { saveAs } from 'file-saver';
 import { Modal } from 'react-bootstrap'
 import AppManager from '../AppManager';
 
-Blockly.Blocks['service_block_sequential'] = {
-  // Container.
-  init: function() {
-    this.setColour(230);
-    this.appendDummyInput()
-        .appendField('SERVICE NAME', 'SERVICE_NAME');
-    this.appendValueInput('SERVICE_PARAM_INPUT')
-        .appendField('Parameters: ');
-    this.setNextStatement(true);
-    this.setPreviousStatement(true);
-    this.setTooltip('Service block.');
-    this.contextMenu = false;
-  }
-};
 
-Blockly.Blocks['service_block_order'] = {
+// a service block that can attach into an input
+Blockly.Blocks['service_block_conditional'] = {
   // Container.
   init: function() {
     this.setColour(230);
@@ -35,19 +22,7 @@ Blockly.Blocks['service_block_order'] = {
   }
 };
 
-Blockly.Blocks['relationship_block'] = {
-  init: function() {
-    this.setColour(0);
-    this.appendDummyInput()
-      .appendField('If');
-    this.appendValueInput('FIRST_STATEMENT')
-    this.appendDummyInput()
-      .appendField('then');
-    this.appendValueInput('SECOND_STATEMENT')
-    this.setNextStatement(true);
-    this.setPreviousStatement(true);
-  }
-};
+
 
 
 Blockly.Blocks['field_dropdown_container'] = {
@@ -76,6 +51,8 @@ Blockly.Blocks['field_dropdown_option_text'] = {
     this.contextMenu = false;
   }
 };
+
+//the parameter block
 Blockly.Blocks['field_dropdown'] = {
   // Dropdown menu.
   init: function() {
@@ -236,35 +213,15 @@ function Apps({apps, setApps, relationships, services}) {
   useEffect(() => { 
     console.log("relationships", relationships)
     let newXML = `<category name="Conditional" colour="#5CA68D">`
-    let serviceXML = `<category name="Sequential" colour="#5CA65C">`
     let orderBasedXML = `<category name="Order-Based" colour="#5C68A6">`
     let conditionalXML = `<category name="Conditional" colour="#5CA68D">`
+    let parameterXML = `<category name="Parameter" colour="#5CA65C"><block type="field_dropdown"></block></category>`
+    let serviceXML = `<category name="Sequential" colour="#5CA65C">`
 
-    for(let i = 0; i < relationships.length; i++){
-      Blockly.Blocks[relationships[i].name] = {
-        // Container.
-        init: function() {
-          this.setColour(230);
-          this.appendDummyInput()
-              .appendField(relationships[i].name, 'SERVICE_NAME');
-          this.appendValueInput('SERVICE_PARAM_INPUT')
-              .appendField('Parameters: ');
-          this.setNextStatement(true);
-          this.setPreviousStatement(true);
-          this.setTooltip('Service block.');
-          this.contextMenu = false;
-        }
-      };
-      relationships[i].type === "orderBased" ? orderBasedXML += `<block type="${relationships[i].name}"></block>` : conditionalXML += `<block type="${relationships[i].name}"></block>`
-      setRelationshipBlocks([...relationshipBlocks, relationships[i].name])
-      newXML += `<block type="${relationships[i].name}"></block>`
-    }
 
-    console.log(services)
-
+    //creating the service blocks (TODO: CURRENTLY UNUSED)
     for(let i = 0; i < services.length; i++){
       Blockly.Blocks[services[i].serviceName] = {
-        // Container.
         init: function() {
           this.setColour(230);
           this.appendDummyInput()
@@ -279,75 +236,167 @@ function Apps({apps, setApps, relationships, services}) {
       };
       serviceXML += `<block type="${services[i].serviceName}"></block>`
     }
-    serviceXML += `</category>`
-    orderBasedXML += `</category>`
-    conditionalXML += `</category>`
 
-    let fullXml = `
-    <xml id="toolbox" style="display: none;">
-      ${serviceXML}
-      ${orderBasedXML}
-      ${conditionalXML}
-    </xml>
-    `
-    let mayaXML=
+    //beginning the toolbox XML
+    let fullXml=
 `      <xml id="toolbox" style="display: none;">
         <category name="Sequential" colour="#5CA65C">
         <block type="controls_repeat_ext"></block>
         <block type="controls_whileUntil"></block>
       </category>
       <category name="Order-Based" colour="#5C68A6">`;
+
+      //add the order-based relationship blocks
       relationships.forEach((relationship) => {
         if (relationship.type === 'orderBased') {
-          Blockly.Blocks[`${relationship.name}_orderBased`] = {
-            init: function () {
+
+          //the first service block, named after the first service in the relationship
+          Blockly.Blocks[`${relationship.service1}_${relationship.name}_service_block_order`] = {
+            init: function() {
+              this.setColour(230);
               this.appendDummyInput()
-                .appendField(relationship.service1)
-                .appendField("then")
-                .appendField(relationship.service2);
-              this.setPreviousStatement(true, null);
-              this.setNextStatement(true, null);
-              this.setColour("#5C68A6");
-              this.setTooltip("");
-              this.setHelpUrl("");
-            },
+                  .appendField(`${relationship.service1}`, 'SERVICE_NAME');
+              this.appendValueInput(`${relationship.service1}_PARAM_INPUT`)
+                  .appendField('Parameters: ');
+              this.setPreviousStatement(true);
+              this.setTooltip('Service block.');
+              this.contextMenu = false;
+              this.setMovable(false); //makes the user unable to disconnect this relationship
+
+            }
           };
-          mayaXML += `<block type="${relationship.name}_orderBased"></block>`;
+          //the second service block, in the "Then clause"
+          Blockly.Blocks[`${relationship.service2}_${relationship.name}_service_block_order`] = {
+            init: function() {
+              this.setColour(230);
+              this.appendDummyInput()
+                  .appendField(`${relationship.service2}`, 'SERVICE_NAME');
+              this.appendValueInput(`${relationship.service2}_PARAM_INPUT`)
+                  .appendField('Parameters: ');
+              this.setPreviousStatement(true);
+              this.setTooltip('Service block.');
+              this.contextMenu = false;
+              this.setMovable(false);
+            }
+          };
+          // takes in two service_block_orders as input
+          Blockly.Blocks[`${relationship.name}_orderBased`] = {
+            init: function() {
+              this.setColour(0);
+              this.appendDummyInput()
+                .appendField('First run');
+              this.appendStatementInput('FIRST_STATEMENT')
+              this.appendDummyInput()
+                .appendField('then run');
+              this.appendStatementInput('SECOND_STATEMENT')
+              this.setNextStatement(true);
+              this.setPreviousStatement(true);
+              this.setEditable(false);
+            }
+          };
+
+          //combine all three blocks together in the XML
+          fullXml += `
+          <block type="${relationship.name}_orderBased">
+            <statement name="FIRST_STATEMENT">
+              <field>First run</field>
+              <block type="${relationship.service1}_${relationship.name}_service_block_order">
+              </block>
+            </statement>
+            <statement name="SECOND_STATEMENT">
+              <field>Then run</field>
+              <block type="${relationship.service2}_${relationship.name}_service_block_order">
+              </block>
+            </statement>
+          </block>`;
         }
       });
 
-      mayaXML += `
+      //creating new toolbox category for the conditionals
+      fullXml += `
           </category>
           <category name="Conditional" colour="#5CA68D">`;
 
       // Add blocks for each relationship under "Conditional"
       relationships.forEach((relationship) => {
+       
         if (relationship.type !== 'orderBased') {
-          Blockly.Blocks[`${relationship.name}_conditional`] = {
-            init: function () {
+          
+          // a service block that can attach into an input. the first one in the if
+          Blockly.Blocks[`${relationship.service1}_${relationship.name}_service_block_conditional`] = {
+            init: function() {
+              this.setColour(230);
               this.appendDummyInput()
-                .appendField("If")
-                .appendField(relationship.service1)
-                .appendField("then")
-                .appendField(relationship.service2);
-              this.setPreviousStatement(true, null);
-              this.setNextStatement(true, null);
-              this.setColour("#5CA68D");
-              this.setTooltip("");
-              this.setHelpUrl("");
-            },
+                  .appendField(`${relationship.service1}`, 'SERVICE_NAME');
+              this.appendValueInput(`${relationship.service1}_PARAM_INPUT`)
+                  .appendField('Parameters: ');
+              this.setTooltip('Service block.');
+              this.setOutput(true, [this, this.getChildren(false)]);
+              this.setMovable(false);
+              this.contextMenu = false;
+            }
           };
-          mayaXML += `<block type="${relationship.name}_conditional"></block>`;
+        //the second service block, in the "Then clause"
+        Blockly.Blocks[`${relationship.service2}_${relationship.name}_service_block_conditional`] = {
+          init: function() {
+            this.setColour(230);
+            this.appendDummyInput()
+                .appendField(`${relationship.service2}`, 'SERVICE_NAME');
+            this.appendValueInput(`${relationship.service2}_PARAM_INPUT`)
+                .appendField('Parameters: ');
+            this.setPreviousStatement(true);
+            this.setTooltip('Service block.');
+            this.contextMenu = false;
+            this.setMovable(false);
+          }
+        };
+
+          // takes in two service_block_orders as input, as well as a number to check the result of the first statement
+          Blockly.Blocks[`${relationship.name}_conditional`] = {
+            init: function() {
+              this.setColour(0);
+              this.appendDummyInput()
+                .appendField('If');
+              this.appendValueInput('FIRST_STATEMENT')
+              this.appendDummyInput()
+                .appendField('==')
+                .appendField(new Blockly.FieldNumber(), 'CONDITION_RESULT_CHECK')
+                .appendField(', then');
+              this.appendStatementInput('SECOND_STATEMENT')
+              this.setNextStatement(true);
+              this.setPreviousStatement(true);
+              this.setEditable(false);
+            }
+          };
+
+          
+          //combine all three blocks together in the XML
+          fullXml += `
+          <block type="${relationship.name}_conditional">
+            <statement name="FIRST_STATEMENT">
+              <field>If</field>
+              <block type="${relationship.service1}_${relationship.name}_service_block_conditional">
+              </block>
+            </statement>
+            <statement name="SECOND_STATEMENT">
+              <field>, then</field>
+              <block type="${relationship.service2}_${relationship.name}_service_block_conditional">
+              </block>
+            </statement>
+          </block>`;
+
         }
       });
 
-      mayaXML += `
+
+      fullXml += `
           </category>
+          ${parameterXML}
         </xml>`;
     
       
     const workspace = Blockly.inject(workspaceRef.current, {
-      toolbox: mayaXML,
+      toolbox: fullXml,
     });
 
     workspace.addChangeListener(() => {
