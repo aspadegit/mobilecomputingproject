@@ -3,9 +3,8 @@ import { Button, Modal, Card } from 'react-bootstrap';
 import { Trash } from 'react-bootstrap-icons';
 import Blockly from 'blockly';
 
-function AppManager({ show, onClose, onFileUpload  }) {
+function AppManager({ apps, setApps, show, onClose, onFileUpload  }) {
     const [isActive, setIsActive] = useState(false);
-    const [apps, setApps] = useState([]);
 
     const handleActivate = () => {
         if (isActive) {
@@ -26,16 +25,14 @@ function AppManager({ show, onClose, onFileUpload  }) {
     };
 
     const handleAddApp = () => {
-        const appName = prompt("Enter a file name (including .iot extension):");
-        if (appName && appName.trim().endsWith('iot')) {
+        const appName = prompt("Enter a name for the app:");
+        if (appName) {
             // Get XML data of the Blockly workspace
             const xml = Blockly.Xml.workspaceToDom(Blockly.getMainWorkspace());
             const xmlText = Blockly.Xml.domToText(xml);
             const newApp = { name: appName, xml: xmlText };
             // Add the new app object to the apps array
             setApps([...apps, newApp]);
-        } else if (appName) {
-            alert("The file name must end with '.iot'");
         }
     };
 

@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 import { Modal } from 'react-bootstrap'
 import AppManager from '../AppManager';
 
-function Apps() {
+function Apps({apps, setApps, relationships}) {
   const workspaceRef = useRef(null);
   const [appSaved, setAppSaved] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -30,6 +30,8 @@ function Apps() {
   `);
 
   useEffect(() => { 
+    console.log("relationships", relationships)
+  
     const workspace = Blockly.inject(workspaceRef.current, {
       toolbox: toolboxXml,
     });
@@ -119,7 +121,7 @@ function Apps() {
         </Modal.Footer>
       </Modal>
 
-      <AppManager show={showManager} onClose={() => setShowManager(false)} onFileUpload={handleFileUpload}/>
+      <AppManager apps={apps} setApps={setApps} show={showManager} onClose={() => setShowManager(false)} onFileUpload={handleFileUpload}/>
 
       {/* Blockly */}
       <div ref={workspaceRef} style={{ height: '84vh', width: '98vw' }} />

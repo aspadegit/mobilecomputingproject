@@ -5,9 +5,8 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { Trash } from 'react-bootstrap-icons';
 
-function Relationships({ services }) {
+function Relationships({ relationships, setRelationships, services }) {
   const [showModal, setShowModal] = useState(false);
-  const [relationships, setRelationships] = useState([]);
   const [relationshipName, setRelationshipName] = useState('');
   const [relationshipType, setRelationshipType] = useState('orderBased');
   const [selectedService1, setSelectedService1] = useState('');

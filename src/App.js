@@ -12,6 +12,7 @@ function App() {
   const [things, setThings] = useState([]);
   const [services, setServices] = useState([]);
   const [relationships, setRelationships] = useState([]);
+  const [apps, setApps] = useState([]);
 
   useEffect(() => {
     const dataTimer = setInterval(() => {
@@ -45,8 +46,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Things things={things}/>} />
           <Route path="/Services" element={<Services services={services}/>} />
-          <Route path="/Relationships" element={<Relationships services={services}/>} />
-          <Route path="/Apps" element={<Apps/>} />
+          <Route path="/Relationships" element={<Relationships setRelationships={setRelationships} relationships={relationships} services={services}/>} />
+          <Route path="/Apps" element={<Apps apps={apps} setApps={setApps} relationships={relationships}/>} />
         </Routes>
     </Router>
   );
