@@ -5,6 +5,7 @@ import { Button } from 'react-bootstrap';
 import { saveAs } from 'file-saver';
 import { Modal } from 'react-bootstrap'
 import AppManager from '../AppManager';
+import {javascriptGenerator, Order} from 'blockly/javascript';
 
 
 // a service block that can attach into an input
@@ -21,9 +22,6 @@ Blockly.Blocks['service_block_conditional'] = {
     this.contextMenu = false;
   }
 };
-
-
-
 
 Blockly.Blocks['field_dropdown_container'] = {
   // Container.
@@ -118,7 +116,7 @@ Blockly.Blocks['field_dropdown'] = {
     for (var i = 0; i < this.optionList_.length; i++) {
       var userData = data[i];
       if (userData !== undefined) {
-          this.setFieldValue(userData || '0', 'USER' + i);
+          this.setFieldValue(userData, 'USER' + i);
       }
     }
   },
@@ -170,6 +168,26 @@ Blockly.Blocks['field_dropdown'] = {
 
 };
 
+javascriptGenerator.forBlock[`field_dropdown`]  = function(block, generator) {
+
+  // get all of the parameters
+  let paramName = "USER";
+  let i = 0;
+  var paramList = [];
+  
+  while(block.getFieldValue(paramName+i) != null)
+  {
+    paramList.push(block.getFieldValue(paramName+i));
+    i++;
+
+  }
+
+  // Return code.
+  return [paramList.toString(), Order.NONE];
+
+}
+
+
 Blockly.Blocks['start_block'] =
 {
   init: function() {
@@ -204,6 +222,8 @@ function fieldNameCheck(referenceBlock) {
 
 function Apps({apps, setApps, relationships, services}) {
   const workspaceRef = useRef(null);
+  const [blocklyWorkspace, setWorkspace] = useState(null);
+  const [currentServices, setServices] = useState(null);
   const [appSaved, setAppSaved] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [showModal, setShowModal] = useState(true);
@@ -212,6 +232,7 @@ function Apps({apps, setApps, relationships, services}) {
 
   useEffect(() => { 
     console.log("relationships", relationships)
+    console.log("services", services);
     let newXML = `<category name="Conditional" colour="#5CA68D">`
     let orderBasedXML = `<category name="Order-Based" colour="#5C68A6">`
     let conditionalXML = `<category name="Conditional" colour="#5CA68D">`
@@ -294,7 +315,7 @@ function Apps({apps, setApps, relationships, services}) {
               this.setEditable(false);
             }
           };
-
+          createOrderBasedCode(relationship);
           //combine all three blocks together in the XML
           fullXml += `
           <block type="${relationship.name}_orderBased">
@@ -361,7 +382,7 @@ function Apps({apps, setApps, relationships, services}) {
               this.appendDummyInput()
                 .appendField('==')
                 .appendField(new Blockly.FieldNumber(), 'CONDITION_RESULT_CHECK')
-                .appendField(', then');
+                .appendField(', then run');
               this.appendStatementInput('SECOND_STATEMENT')
               this.setNextStatement(true);
               this.setPreviousStatement(true);
@@ -379,7 +400,7 @@ function Apps({apps, setApps, relationships, services}) {
               </block>
             </statement>
             <statement name="SECOND_STATEMENT">
-              <field>, then</field>
+              <field>, then run</field>
               <block type="${relationship.service2}_${relationship.name}_service_block_conditional">
               </block>
             </statement>
@@ -399,6 +420,9 @@ function Apps({apps, setApps, relationships, services}) {
       toolbox: fullXml,
     });
 
+    setWorkspace(workspace);
+    setServices(services);
+
     workspace.addChangeListener(() => {
       setAppSaved(false);
     });
@@ -407,6 +431,57 @@ function Apps({apps, setApps, relationships, services}) {
       workspace.dispose();
     };
   }, []);
+
+  function createOrderBasedCode(relationship)
+  {
+
+    //service 1's code
+    javascriptGenerator.forBlock[`${relationship.service1}_${relationship.name}_service_block_order`]  = function(block, generator) {
+      // Collect argument strings.
+      const serviceName = block.getFieldValue('SERVICE_NAME');
+      const parameterBlock = block.getInputTargetBlock(`${relationship.service1}_PARAM_INPUT`);
+      var innerCode = generator.blockToCode(parameterBlock, true)[0];
+
+      if(innerCode == undefined)
+        innerCode = "";
+
+      // Return code.
+      return `console.log("${serviceName} runs with parameters [${innerCode}]");`;
+
+    }
+    //service 2's code
+    javascriptGenerator.forBlock[`${relationship.service2}_${relationship.name}_service_block_order`]  = function(block, generator) {
+      // Collect argument strings.
+      const serviceName = block.getFieldValue('SERVICE_NAME');
+      const parameterBlock = block.getInputTargetBlock(`${relationship.service2}_PARAM_INPUT`);
+      var innerCode = generator.blockToCode(parameterBlock, true)[0];
+
+      if(innerCode == undefined)
+        innerCode = "";
+      // Return code.
+
+      console.log(`runService("${serviceName}", "${innerCode}");`);
+      return `runService("${serviceName}", "${innerCode}");`;
+
+    }
+
+    //relationship block's code
+    javascriptGenerator.forBlock[`${relationship.name}_orderBased`] = function(block, generator) {
+
+      //get the statements attached to this block (ordered top to bottom)
+      const children = block.getChildren(true);
+      var innerCode = "";
+
+      //get the code from the children
+      for(let i = 0; i < children.length; i++)
+      {
+        innerCode += generator.blockToCode(children[i], true);
+      }
+
+      return innerCode;
+    }
+  }
+
 
   const handleSaveApp = () => {
     const fileName = prompt("Enter a file name (including .iot extension):");
@@ -484,7 +559,7 @@ function Apps({apps, setApps, relationships, services}) {
         </Modal.Footer>
       </Modal>
 
-      <AppManager apps={apps} setApps={setApps} show={showManager} onClose={() => setShowManager(false)} onFileUpload={handleFileUpload}/>
+      <AppManager apps={apps} setApps={setApps} workspace={blocklyWorkspace} services={currentServices} show={showManager} onClose={() => setShowManager(false)} onFileUpload={handleFileUpload}/>
 
       {/* Blockly */}
       <div ref={workspaceRef} style={{ height: '84vh', width: '98vw' }} />

@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { Button, Modal, Card } from 'react-bootstrap';
 import { Trash } from 'react-bootstrap-icons';
 import Blockly from 'blockly';
+import {javascriptGenerator} from 'blockly/javascript';
+import axios from 'axios';
 
-function AppManager({ apps, setApps, show, onClose, onFileUpload  }) {
+
+function AppManager({ apps, setApps, workspace, services, show, onClose, onFileUpload  }) {
     const [isActive, setIsActive] = useState(false);
 
     const handleActivate = () => {
@@ -13,6 +16,19 @@ function AppManager({ apps, setApps, show, onClose, onFileUpload  }) {
         } else {
             // Functionality for activating the current app
             console.log('Activating the current app');
+
+            //running blockly code
+            window.LoopTrap = 1000;
+            javascriptGenerator.INFINITE_LOOP_TRAP = 'if(--window.LoopTrap == 0) throw "Infinite loop.";\n';
+            javascriptGenerator.addReservedWords('code');
+            var code = javascriptGenerator.workspaceToCode(workspace);
+            try {
+                eval(code);
+            } catch(e)
+            {
+                console.log(e);
+            }
+            
         }
         setIsActive(!isActive);
     };
@@ -40,6 +56,47 @@ function AppManager({ apps, setApps, show, onClose, onFileUpload  }) {
         onFileUpload(apps[index].xml);
     };
 
+    
+    function runService(serviceName, parameters)
+    {
+        var arrayParameters = parameters.split(',');
+        const options = {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            }
+        }
+
+        
+        for(let i = 0; i < services.length; i++)
+        {
+
+            //parameters in service input will always take the form of (name, type, NULL) from what i can tell
+            let serviceParamNum = 0;
+            if(services[i].serviceInput.length % 3 == 0)
+                serviceParamNum = Math.floor(services[i].serviceInput.length/3);
+
+            //correct service found
+            if(services[i].serviceName == serviceName && serviceParamNum == arrayParameters.length)
+            {
+
+                var json = {
+                    ip: services[i].ip,
+                    thingID: services[i].thingID,
+                    serviceName: services[i].serviceName,
+                    params: parameters  //passing the string version of the parameters
+                }
+                //call it!
+                axios.post('http://localhost:3001/runService', json, options)
+                    .then(response => {console.log(response);})
+                    .catch(error => {console.log(error);});
+
+            }
+        }
+      
+    }
+
   return (
     <Modal show={show} onHide={onClose}>
       <Modal.Header closeButton>
@@ -65,6 +122,9 @@ function AppManager({ apps, setApps, show, onClose, onFileUpload  }) {
       </Modal.Body>
     </Modal>
   );
+
+
 }
+
 
 export default AppManager;

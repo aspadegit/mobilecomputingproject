@@ -1,6 +1,7 @@
 import net from 'net';
 import dgram from 'dgram';
 import express from "express";
+import cors from 'cors';
 
 var server = dgram.createSocket("udp4");
 
@@ -28,6 +29,8 @@ app.get('/getServices', (req, res) => {
 
     res.send(JSON.stringify(serviceList));
   });
+
+
   
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
@@ -52,12 +55,6 @@ app.listen(port, () => {
 }
 */
 
-var tweet = `{ \"Tweet Type\" : \"Service call\",
-\"Thing ID\" : \"AlarmInterface\",
-\"Space ID\" : \"AlarmSmartSpace\",
-\"Service Name\" : \"no service\",
-\"Service Inputs\" : \"()\"
-}`;
 
 server.on('error', (err) => {
     console.error(`server error:\n${err.stack}`);
@@ -66,7 +63,6 @@ server.on('error', (err) => {
 
 //receives messages from the client
 server.on('message', (message, remote) => {
-    console.log("SERVER RECEIVED:");
     //console.log('MCast Msg: From: ' + remote.address + ':' + remote.port +' - ' + message);
     let stringMessage = message.toString();
 
@@ -108,6 +104,8 @@ function parseTweetType(json, ip)
 
 function addToThingList(json, ip)
 {
+    console.log("SERVER RECEIVED:");
+
     if(json === undefined)
         return false;
 
@@ -126,6 +124,8 @@ function addToThingList(json, ip)
 
 function addToServiceList(json, ip)
 {
+    console.log("SERVER RECEIVED:");
+
     if(json === undefined)
     return false;
 
@@ -155,25 +155,53 @@ function addToServiceList(json, ip)
 
 // ========================= CLIENT CODE ======================
 const HOST_ADDR = "10.20.155.26";
-//var client = dgram.createSocket('udp4');
-var piIP = "10.20.155.30";
+var piIP = "";
 
 var client = new net.Socket();
 client.setEncoding('utf-8');
 
-//setInterval(clientWrite, 5000);
+//prevents CORS errors on client side
+app.use(cors());
+app.use(express.json());
 
-function clientWrite()
-{
-    client.connect(6668, piIP, function() {
-        
-        client.write(tweet);
+//handle running a service, which will then require this to be a client
+app.post('/runService', (req, res) => {
 
-    });
-}
+ 
+    console.log("POST REQUEST: ");
+    console.log(req.body);
+    
+    piIP = req.body.ip;
+
+    var tweet = `{ \"Tweet Type\" : \"Service call\",
+    \"Thing ID\" : \"${req.body.thingID}\",
+    \"Space ID\" : \"AlarmSmartSpace\",
+    \"Service Name\" : \"${req.body.serviceName}\",
+    \"Service Inputs\" : \"(${req.body.params})\"
+    }`;
+
+    client = new net.Socket();
+    client.setEncoding('utf-8');
+    client.connect(6668, piIP, () => { });
+    
+    client.write(tweet);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    res.send("PUT Request Called")
+})
+
+
+
 //receiving the reply tweet from the Pi
 client.on('data', (data) =>{
     var json = JSON.parse(data);
     console.log("CLIENT RECEIVED:")
     console.log("Result: " + json["Service Result"]);
+    
+});
+
+client.on('error', (error) => {
+    console.log(error);
 });
