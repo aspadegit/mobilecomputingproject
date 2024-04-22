@@ -251,11 +251,15 @@ function Apps({apps, setApps, relationships, services}) {
           this.setColour(230);
           this.appendDummyInput()
               .appendField(`${services[i].serviceName}`, 'SERVICE_NAME');
+            
+          //it returns a value
           if(services[i].serviceOutput !== "NULL"){
             this.appendDummyInput()
               .appendField('==')
               .appendField(new Blockly.FieldNumber(), 'CONDITION_RESULT_CHECK')
           }
+
+          //if it returns a value
           if(services[i].serviceInput[0] !== "NULL"){
             this.appendValueInput(`${services[i].serviceName}_PARAM_INPUT`)
             .appendField('Parameters: ');
@@ -267,7 +271,27 @@ function Apps({apps, setApps, relationships, services}) {
           this.contextMenu = false;
         }
       };
-      
+      javascriptGenerator.forBlock[`${services[i].serviceName}`]  = function(block, generator) {
+        // Collect argument strings.
+        const serviceName = block.getFieldValue('SERVICE_NAME');
+        const parameterBlock = block.getInputTargetBlock(`${services[i].serviceName}_PARAM_INPUT`);
+        var innerCode = generator.blockToCode(parameterBlock, true)[0];
+  
+        if(innerCode == undefined)
+          innerCode = "";
+  
+        //it returns a value
+        if(services[i].serviceOutput !== "NULL")
+        {
+          return `runService("${serviceName}", "${innerCode}");`;
+        }
+        //does not return a value
+        else
+        {
+          return `runService("${serviceName}", "${innerCode}");`;
+        }
+  
+      }
       serviceXML += `<block type="${services[i].serviceName}"></block>`
     }
 
@@ -283,7 +307,7 @@ function Apps({apps, setApps, relationships, services}) {
         if (relationship.type === 'orderBased') {
 
           //the first service block, named after the first service in the relationship
-          Blockly.Blocks[`${relationship.service1}_${relationship.name}_service_block_order`] = {
+          Blockly.Blocks[`${relationship.service1}_${relationship.name}_service_block_order_1`] = {
             init: function() {
               this.setColour(230);
               this.appendDummyInput()
@@ -298,7 +322,7 @@ function Apps({apps, setApps, relationships, services}) {
             }
           };
           //the second service block, in the "Then clause"
-          Blockly.Blocks[`${relationship.service2}_${relationship.name}_service_block_order`] = {
+          Blockly.Blocks[`${relationship.service2}_${relationship.name}_service_block_order_2`] = {
             init: function() {
               this.setColour(230);
               this.appendDummyInput()
@@ -332,12 +356,12 @@ function Apps({apps, setApps, relationships, services}) {
           <block type="${relationship.name}_orderBased">
             <statement name="FIRST_STATEMENT">
               <field>First run</field>
-              <block type="${relationship.service1}_${relationship.name}_service_block_order">
+              <block type="${relationship.service1}_${relationship.name}_service_block_order_1">
               </block>
             </statement>
             <statement name="SECOND_STATEMENT">
               <field>Then run</field>
-              <block type="${relationship.service2}_${relationship.name}_service_block_order">
+              <block type="${relationship.service2}_${relationship.name}_service_block_order_2">
               </block>
             </statement>
           </block>`;
@@ -355,7 +379,7 @@ function Apps({apps, setApps, relationships, services}) {
         if (relationship.type !== 'orderBased') {
           
           // a service block that can attach into an input. the first one in the if
-          Blockly.Blocks[`${relationship.service1}_${relationship.name}_service_block_conditional`] = {
+          Blockly.Blocks[`${relationship.service1}_${relationship.name}_service_block_conditional_1`] = {
             init: function() {
               this.setColour(230);
               this.appendDummyInput()
@@ -369,7 +393,7 @@ function Apps({apps, setApps, relationships, services}) {
             }
           };
         //the second service block, in the "Then clause"
-        Blockly.Blocks[`${relationship.service2}_${relationship.name}_service_block_conditional`] = {
+        Blockly.Blocks[`${relationship.service2}_${relationship.name}_service_block_conditional_2`] = {
           init: function() {
             this.setColour(230);
             this.appendDummyInput()
@@ -409,12 +433,12 @@ function Apps({apps, setApps, relationships, services}) {
           <block type="${relationship.name}_conditional">
             <statement name="FIRST_STATEMENT">
               <field>If</field>
-              <block type="${relationship.service1}_${relationship.name}_service_block_conditional">
+              <block type="${relationship.service1}_${relationship.name}_service_block_conditional_1">
               </block>
             </statement>
             <statement name="SECOND_STATEMENT">
               <field>, then run</field>
-              <block type="${relationship.service2}_${relationship.name}_service_block_conditional">
+              <block type="${relationship.service2}_${relationship.name}_service_block_conditional_2">
               </block>
             </statement>
           </block>`;
@@ -449,7 +473,7 @@ function Apps({apps, setApps, relationships, services}) {
   {
 
     //service 1's code
-    javascriptGenerator.forBlock[`${relationship.service1}_${relationship.name}_service_block_order`]  = function(block, generator) {
+    javascriptGenerator.forBlock[`${relationship.service1}_${relationship.name}_service_block_order_1`]  = function(block, generator) {
       // Collect argument strings.
       const serviceName = block.getFieldValue('SERVICE_NAME');
       const parameterBlock = block.getInputTargetBlock(`${relationship.service1}_PARAM_INPUT`);
@@ -459,11 +483,14 @@ function Apps({apps, setApps, relationships, services}) {
         innerCode = "";
 
       // Return code.
-      return `runService("${serviceName}", "${innerCode}");`;
+      var code = `
+        runService("${serviceName}", "${innerCode}").then((res) => { 
+      `;
+      return code;
 
     }
     //service 2's code
-    javascriptGenerator.forBlock[`${relationship.service2}_${relationship.name}_service_block_order`]  = function(block, generator) {
+    javascriptGenerator.forBlock[`${relationship.service2}_${relationship.name}_service_block_order_2`]  = function(block, generator) {
       // Collect argument strings.
       const serviceName = block.getFieldValue('SERVICE_NAME');
       const parameterBlock = block.getInputTargetBlock(`${relationship.service2}_PARAM_INPUT`);
@@ -473,7 +500,6 @@ function Apps({apps, setApps, relationships, services}) {
         innerCode = "";
       // Return code.
 
-      console.log(`runService("${serviceName}", "${innerCode}");`);
       return `runService("${serviceName}", "${innerCode}");`;
 
     }
@@ -489,7 +515,7 @@ function Apps({apps, setApps, relationships, services}) {
       {
         innerCode += generator.blockToCode(children[i], true);
       }
-
+      innerCode+= '})';
       return innerCode;
 
     }
@@ -499,7 +525,7 @@ function Apps({apps, setApps, relationships, services}) {
   {
     
     //service 1's code
-    javascriptGenerator.forBlock[`${relationship.service1}_${relationship.name}_service_block_conditional`]  = function(block, generator) {
+    javascriptGenerator.forBlock[`${relationship.service1}_${relationship.name}_service_block_conditional_1`]  = function(block, generator) {
       // Collect argument strings.
       const serviceName = block.getFieldValue('SERVICE_NAME');
       const parameterBlock = block.getInputTargetBlock(`${relationship.service1}_PARAM_INPUT`);
@@ -509,17 +535,15 @@ function Apps({apps, setApps, relationships, services}) {
         innerCode = "";
 
       var code = `
-        console.log("about to run runService1");
         var result = null;
         runService("${serviceName}", "${innerCode}").then((response) => { result = response.data["Service Result"];
-        console.log("finished runService1 with result " + result);
       `;
       // Return code.
       return [code, Order.NONE];
     }
 
     //service 2's code
-    javascriptGenerator.forBlock[`${relationship.service2}_${relationship.name}_service_block_conditional`]  = function(block, generator) {
+    javascriptGenerator.forBlock[`${relationship.service2}_${relationship.name}_service_block_conditional_2`]  = function(block, generator) {
       // Collect argument strings.
       const serviceName = block.getFieldValue('SERVICE_NAME');
       const parameterBlock = block.getInputTargetBlock(`${relationship.service2}_PARAM_INPUT`);
@@ -541,13 +565,11 @@ function Apps({apps, setApps, relationships, services}) {
       var valueToCheck = block.getFieldValue('CONDITION_RESULT_CHECK');
 
       //get the first child's code (value input)
-      innerCode += `async function getData() { console.log("inside the async");`
+      innerCode += `async function getData() {`
       innerCode += generator.blockToCode(children[0], true)[0]; //const result = await runService("${serviceName}", "${innerCode}");
-      innerCode += `if(parseInt(result) == parseInt(${valueToCheck})) {`; //if(result === CONDITION_RESULT_CHECK) {
-      innerCode += `console.log("inside the if statement. result is ${valueToCheck}");`
+      innerCode += `if(parseInt(result) == parseInt(${valueToCheck})) {`; //if(parseInt(result) === parseInt(CONDITION_RESULT_CHECK)) {
       innerCode += generator.blockToCode(children[1], true); //runService(service2)
-      innerCode += `}
-      console.log("outside the if statement");`; //closing If statement
+      innerCode += `}`; //closing If statement
       innerCode += `});}`; //closing getData
 
       innerCode += `getData();` //run async

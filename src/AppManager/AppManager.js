@@ -12,6 +12,7 @@ function AppManager({ apps, setApps, workspace, services, show, onClose, onFileU
     const handleActivate = () => {
         if (isActive) {
             // Functionality for stopping the current app
+
             console.log('Stopping the current app');
         } else {
             // Functionality for activating the current app
@@ -28,9 +29,8 @@ function AppManager({ apps, setApps, workspace, services, show, onClose, onFileU
             {
                 console.log(e);
             }
-            
         }
-        setIsActive(!isActive);
+        // setIsActive(!isActive);
     };
 
     const handleDeleteApp = (index) => {
