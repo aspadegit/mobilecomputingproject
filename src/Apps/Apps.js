@@ -390,6 +390,8 @@ function Apps({apps, setApps, relationships, services}) {
             }
           };
 
+          createConditionalCode(relationship);
+
           
           //combine all three blocks together in the XML
           fullXml += `
@@ -446,7 +448,7 @@ function Apps({apps, setApps, relationships, services}) {
         innerCode = "";
 
       // Return code.
-      return `console.log("${serviceName} runs with parameters [${innerCode}]");`;
+      return `runService("${serviceName}", "${innerCode}");`;
 
     }
     //service 2's code
@@ -471,7 +473,6 @@ function Apps({apps, setApps, relationships, services}) {
       //get the statements attached to this block (ordered top to bottom)
       const children = block.getChildren(true);
       var innerCode = "";
-
       //get the code from the children
       for(let i = 0; i < children.length; i++)
       {
@@ -479,9 +480,72 @@ function Apps({apps, setApps, relationships, services}) {
       }
 
       return innerCode;
+
     }
   }
 
+  function createConditionalCode(relationship)
+  {
+    
+    //service 1's code
+    javascriptGenerator.forBlock[`${relationship.service1}_${relationship.name}_service_block_conditional`]  = function(block, generator) {
+      // Collect argument strings.
+      const serviceName = block.getFieldValue('SERVICE_NAME');
+      const parameterBlock = block.getInputTargetBlock(`${relationship.service1}_PARAM_INPUT`);
+      var innerCode = generator.blockToCode(parameterBlock, true)[0];
+
+      if(innerCode === undefined)
+        innerCode = "";
+
+      var code = `
+        console.log("about to run runService1");
+        var result = null;
+        runService("${serviceName}", "${innerCode}").then((response) => { result = response.data["Service Result"];
+        console.log("finished runService1 with result " + result);
+      `;
+      // Return code.
+      return [code, Order.NONE];
+    }
+
+    //service 2's code
+    javascriptGenerator.forBlock[`${relationship.service2}_${relationship.name}_service_block_conditional`]  = function(block, generator) {
+      // Collect argument strings.
+      const serviceName = block.getFieldValue('SERVICE_NAME');
+      const parameterBlock = block.getInputTargetBlock(`${relationship.service2}_PARAM_INPUT`);
+      var innerCode = generator.blockToCode(parameterBlock, true)[0];
+
+      if(innerCode === undefined)
+        innerCode = "";
+
+      // Return code.
+      return `runService("${serviceName}", "${innerCode}");`;
+    }
+
+    //relationship block's code
+    javascriptGenerator.forBlock[`${relationship.name}_conditional`] = function(block, generator) {
+
+      //get the statements attached to this block (ordered top to bottom)
+      const children = block.getChildren(true);
+      var innerCode = "";
+      var valueToCheck = block.getFieldValue('CONDITION_RESULT_CHECK');
+
+      //get the first child's code (value input)
+      innerCode += `async function getData() { console.log("inside the async");`
+      innerCode += generator.blockToCode(children[0], true)[0]; //const result = await runService("${serviceName}", "${innerCode}");
+      innerCode += `if(parseInt(result) == parseInt(${valueToCheck})) {`; //if(result === CONDITION_RESULT_CHECK) {
+      innerCode += `console.log("inside the if statement. result is ${valueToCheck}");`
+      innerCode += generator.blockToCode(children[1], true); //runService(service2)
+      innerCode += `}
+      console.log("outside the if statement");`; //closing If statement
+      innerCode += `});}`; //closing getData
+
+      innerCode += `getData();` //run async
+      
+      return innerCode;
+
+    }
+
+  }
 
   const handleSaveApp = () => {
     const fileName = prompt("Enter a file name (including .iot extension):");

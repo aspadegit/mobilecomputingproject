@@ -57,8 +57,11 @@ function AppManager({ apps, setApps, workspace, services, show, onClose, onFileU
     };
 
     
-    function runService(serviceName, parameters)
+    async function runService(serviceName, parameters)
     {
+        var returnResponse = null;
+        var json = null;
+        var foundService = false;
         var arrayParameters = parameters.split(',');
         const options = {
             headers: {
@@ -72,29 +75,24 @@ function AppManager({ apps, setApps, workspace, services, show, onClose, onFileU
         for(let i = 0; i < services.length; i++)
         {
 
-            //parameters in service input will always take the form of (name, type, NULL) from what i can tell
-            let serviceParamNum = 0;
-            if(services[i].serviceInput.length % 3 == 0)
-                serviceParamNum = Math.floor(services[i].serviceInput.length/3);
 
             //correct service found
-            if(services[i].serviceName == serviceName && serviceParamNum == arrayParameters.length)
+            if(services[i].serviceName == serviceName)
             {
 
-                var json = {
+                json = {
                     ip: services[i].ip,
                     thingID: services[i].thingID,
                     serviceName: services[i].serviceName,
                     params: parameters  //passing the string version of the parameters
                 }
-                //call it!
-                axios.post('http://localhost:3001/runService', json, options)
-                    .then(response => {console.log(response);})
-                    .catch(error => {console.log(error);});
+                foundService = true;
+                console.log("service found: ", json);
 
+                return await axios.post('http://localhost:3001/runService', json, options)
             }
         }
-      
+       
     }
 
   return (

@@ -164,6 +164,8 @@ client.setEncoding('utf-8');
 app.use(cors());
 app.use(express.json());
 
+var response = null;
+
 //handle running a service, which will then require this to be a client
 app.post('/runService', (req, res) => {
 
@@ -182,25 +184,33 @@ app.post('/runService', (req, res) => {
 
     client = new net.Socket();
     client.setEncoding('utf-8');
-    client.connect(6668, piIP, () => { });
+
+    client.connect(6668, piIP, () => { 
+        console.log('connected to Pi'); //receiving the reply tweet from the Pi
+        client.on('data', (data) =>{
+            var json = JSON.parse(data);
+            console.log("CLIENT RECEIVED:")
+            console.log("Result: " + json["Service Result"]);
+        
+            if(res != null)
+            {
+                res.setHeader('Access-Control-Allow-Origin', '*');
+                res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+                res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+                res.send(json);
+            }
+    
+        });
+    });
     
     client.write(tweet);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    res.send("PUT Request Called")
+    response = res;
+    
 })
 
 
 
-//receiving the reply tweet from the Pi
-client.on('data', (data) =>{
-    var json = JSON.parse(data);
-    console.log("CLIENT RECEIVED:")
-    console.log("Result: " + json["Service Result"]);
-    
-});
 
 client.on('error', (error) => {
     console.log(error);
