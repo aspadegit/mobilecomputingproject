@@ -129,8 +129,10 @@ function Relationships({ relationships, setRelationships, services }) {
               onChange={(e) => setSelectedService1(e.target.value)}
             >
               <option value=""></option>
-              {services.map((service, index) => (
+              {relationshipType !== 'conditional' ? services.map((service, index) => ( 
                 <option key={index} value={service.serviceName}>{service.serviceName}</option>
+              )) : services.map((service, index) => (
+                service.serviceOutput !== "NULL" ? <option key={index} value={service.serviceName}>{service.serviceName}</option> :<></>
               ))}
             </Form.Control>
           </Form.Group>
