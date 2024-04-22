@@ -237,33 +237,44 @@ function Apps({apps, setApps, relationships, services}) {
     let orderBasedXML = `<category name="Order-Based" colour="#5C68A6">`
     let conditionalXML = `<category name="Conditional" colour="#5CA68D">`
     let parameterXML = `<category name="Parameter" colour="#5CA65C"><block type="field_dropdown"></block></category>`
-    let serviceXML = `<category name="Sequential" colour="#5CA65C">`
+    let serviceXML = `<category name="Sequential" colour="#5CA65C">
+                        <block type="controls_repeat_ext"></block>
+                        <block type="controls_whileUntil"></block>`
 
 
     //creating the service blocks (TODO: CURRENTLY UNUSED)
     for(let i = 0; i < services.length; i++){
+      console.log(services)
+      // a service block that can attach into an input. the first one in the if
       Blockly.Blocks[services[i].serviceName] = {
         init: function() {
           this.setColour(230);
           this.appendDummyInput()
-              .appendField(services[i].serviceName, 'SERVICE_NAME');
-          this.appendValueInput('SERVICE_PARAM_INPUT')
-              .appendField('Parameters: ');
-          this.setNextStatement(true);
-          this.setPreviousStatement(true);
+              .appendField(`${services[i].serviceName}`, 'SERVICE_NAME');
+          if(services[i].serviceOutput !== "NULL"){
+            this.appendDummyInput()
+              .appendField('==')
+              .appendField(new Blockly.FieldNumber(), 'CONDITION_RESULT_CHECK')
+          }
+          if(services[i].serviceInput[0] !== "NULL"){
+            this.appendValueInput(`${services[i].serviceName}_PARAM_INPUT`)
+            .appendField('Parameters: ');
+          }
           this.setTooltip('Service block.');
+          this.setOutput(true);
+          this.setPreviousStatement(true);
+          this.setNextStatement(true);
           this.contextMenu = false;
         }
       };
+      
       serviceXML += `<block type="${services[i].serviceName}"></block>`
     }
 
     //beginning the toolbox XML
     let fullXml=
 `      <xml id="toolbox" style="display: none;">
-        <category name="Sequential" colour="#5CA65C">
-        <block type="controls_repeat_ext"></block>
-        <block type="controls_whileUntil"></block>
+      ${serviceXML}
       </category>
       <category name="Order-Based" colour="#5C68A6">`;
 
@@ -386,7 +397,7 @@ function Apps({apps, setApps, relationships, services}) {
               this.appendStatementInput('SECOND_STATEMENT')
               this.setNextStatement(true);
               this.setPreviousStatement(true);
-              this.setEditable(false);
+              this.setEditable(true);
             }
           };
 
