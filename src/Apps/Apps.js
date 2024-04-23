@@ -237,9 +237,7 @@ function Apps({apps, setApps, relationships, services}) {
     let orderBasedXML = `<category name="Order-Based" colour="#5C68A6">`
     let conditionalXML = `<category name="Conditional" colour="#5CA68D">`
     let parameterXML = `<category name="Parameter" colour="#5CA65C"><block type="field_dropdown"></block></category>`
-    let serviceXML = `<category name="Sequential" colour="#5CA65C">
-                        <block type="controls_repeat_ext"></block>
-                        <block type="controls_whileUntil"></block>`
+    let serviceXML = `<category name="Sequential" colour="#5CA65C">`
 
 
     //creating the service blocks (TODO: CURRENTLY UNUSED)
